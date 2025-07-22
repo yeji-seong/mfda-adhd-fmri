@@ -78,7 +78,7 @@ def gen_sim1(mean_func1, mean_func2, sigma1, sigma2, n1, n2, r, t):
     return X, y
 
 
-def generate_samples(data, n_samples, n_components=50):
+def gen_fpca_samples(data, n_samples, n_components=50):
     """
     Generate synthetic functional samples using FPCA.
 
@@ -134,8 +134,8 @@ def gen_sim2(data1, data2, n1, n2, r):
         df1 = pd.DataFrame([df.loc[j] for df in data1])
         df2 = pd.DataFrame([df.iloc[j] for df in data2])
 
-        X[:n1, :, j] = generate_samples(df1, n1)
-        X[n1:, :, j] = generate_samples(df2, n2)
+        X[:n1, :, j] = gen_fpca_samples(df1, n1)
+        X[n1:, :, j] = gen_fpca_samples(df2, n2)
 
     y = [1]*n1 + [0]*n2            
     
