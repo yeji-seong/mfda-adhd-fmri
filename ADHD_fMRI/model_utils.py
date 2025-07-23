@@ -1,5 +1,8 @@
 import numpy as np
-
+import pandas as pd
+import time
+from skfda import FDataGrid
+from skfda.preprocessing.registration import ElasticRegistration
 from sklearn.decomposition import SparsePCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split, GridSearchCV
@@ -7,6 +10,63 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+
+
+def align_funcdata(X, region_data, grid_points):
+    n = len(X)
+    aligned_funclist = []
+
+    for num in range(n):
+        start_time = time.time()
+
+        aligned_df = pd.DataFrame(index=range(82), columns=range(grid_points))
+
+        subject_data = X[num]
+
+        for idx, region_id in enumerate(region_data["Region_ID"]):
+            region_index = region_data[region_data["Region_ID"] == region_id].index[0]
+            start = region_data.loc[:region_index - 1, "Count"].sum()
+            end = region_data.loc[:region_index, "Count"].sum()
+
+            region_signals = subject_data.iloc[start:end]
+
+            reg_fdg = FDataGrid(region_signals.iloc[0].values.reshape(1, -1, 1),
+                                grid_points=np.arange(grid_points))
+
+            for i in range(1, len(region_signals)):
+                fdg = FDataGrid(region_signals.iloc[i].values.reshape(1, -1, 1),
+                                grid_points=np.arange(grid_points))
+                reg_fdg = reg_fdg.concatenate(fdg)
+
+            aligned_fdg = ElasticRegistration().fit_transform(reg_fdg)
+
+            aligned_mean_df = pd.DataFrame(np.mean(aligned_fdg).data_matrix[0]).T
+
+            aligned_df.iloc[idx] = aligned_mean_df.values[0]
+
+        aligned_funclist.append(aligned_df)
+
+        elapsed_min = round((time.time() - start_time) / 60)
+        print(f"{num + 1}/{n} is done, Time: {elapsed_min} min")
+
+    return aligned_funclist
+
+
+def calc_curvelen(aligend_funclist):
+
+    r = len(aligend_funclist[0])
+    t = len(aligend_funclist)
+
+    total_curve_df = pd.DataFrame(index=range(r), columns=range(t))
+
+    for time_idx in range(t):
+        current_df = aligend_funclist[time_idx]
+
+        for region_idx, row in current_df.iterrows():
+            diffs = np.abs(np.diff([0] + row.tolist()))
+            total_curve_df.iloc[region_idx, time_idx] = sum(diffs)
+
+    return total_curve_df.T
 
 
 def prep_data(X, y, random_state=0):
