@@ -131,7 +131,7 @@ def gen_sim2(data1, data2, n1, n2, r):
         
     for j in range(r):
 
-        df1 = pd.DataFrame([df.loc[j] for df in data1])
+        df1 = pd.DataFrame([df.iloc[j] for df in data1])
         df2 = pd.DataFrame([df.iloc[j] for df in data2])
 
         X[:n1, :, j] = gen_fpca_samples(df1, n1)
