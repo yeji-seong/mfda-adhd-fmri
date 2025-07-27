@@ -110,6 +110,7 @@ def gen_fpca_samples(data, n_samples, n_components=50):
 
 def gen_sim2(data1, data2, n1, n2, r):
     """
+    (Simulation 2)
     Generate simulated functional samples using FPCA.
 
     Parameters
