@@ -31,10 +31,13 @@ def align_funcdata(funcs, region, t_grid):
             end = region.loc[:idx, "Count"].sum()
 
             region_funcs = sub_funcs.iloc[start:end]
-            region_fdg = FDataGrid(
-                data_matrix=region_funcs.values[:, :, np.newaxis],
-                grid_points=t_grid
-            )
+            region_fdg = FDataGrid(region_funcs.iloc[0].values.reshape(1, -1, 1),
+                                   grid_points=np.arange(t_grid))
+            for rr in range(1, len(region_funcs)):
+                fdg = FDataGrid(region_funcs.iloc[rr].values.reshape(1, -1, 1),
+                                grid_points=np.arange(t_grid))
+                region_fdg = region_fdg.concatenate(fdg)
+
             aligned_fdg = ElasticRegistration().fit_transform(region_fdg)
             aligned_mean_df = pd.DataFrame(np.mean(aligned_fdg).data_matrix[0]).T
             aligned_df.iloc[ii] = aligned_mean_df.values[0]
