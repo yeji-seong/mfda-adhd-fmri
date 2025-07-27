@@ -33,7 +33,7 @@ def align_funcdata(funcs, region, t_grid):
             region_funcs = sub_funcs.iloc[start:end]
             region_fdg = FDataGrid(
                 data_matrix=region_funcs.values[:, :, np.newaxis],
-                grid_points=grid
+                grid_points=t_grid
             )
             aligned_fdg = ElasticRegistration().fit_transform(region_fdg)
             aligned_mean_df = pd.DataFrame(np.mean(aligned_fdg).data_matrix[0]).T
